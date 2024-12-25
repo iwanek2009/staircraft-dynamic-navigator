@@ -13,8 +13,31 @@ serve(async (req) => {
 
   try {
     const { city } = await req.json()
+    
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // Generate city-specific content
+    // Check if content already exists
+    const { data: existingContent } = await supabaseClient
+      .from('city_content')
+      .select('*')
+      .eq('city', city)
+      .single()
+
+    if (existingContent) {
+      return new Response(
+        JSON.stringify(existingContent),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    }
+
+    // Generate new content
     const content = {
       title: `Expert Stair Manufacturers in ${city} – Custom Designs & UK Compliance`,
       metaDescription: `Professional stair manufacturing services in ${city}. Bespoke designs, full UK Building Regulations compliance. Get your free consultation today.`,
@@ -39,8 +62,22 @@ serve(async (req) => {
       ]
     }
 
+    // Store the generated content
+    const { data, error } = await supabaseClient
+      .from('city_content')
+      .insert([
+        {
+          city,
+          content
+        }
+      ])
+      .select()
+      .single()
+
+    if (error) throw error
+
     return new Response(
-      JSON.stringify(content),
+      JSON.stringify(data.content),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
