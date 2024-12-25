@@ -5,24 +5,25 @@ import { Helmet } from "react-helmet";
 import { CityHero } from "./city/CityHero";
 import { CityIntroduction } from "./city/CityIntroduction";
 import { CityFAQ } from "./city/CityFAQ";
+import { supabase } from "@/lib/supabase";
 
 const fetchCityContent = async (city: string) => {
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-city-content`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ city }),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch city content');
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-city-content', {
+      body: { city }
+    });
+
+    if (error) {
+      console.error('Error fetching city content:', error);
+      throw error;
+    }
+
+    console.log('Received city content:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch city content:', error);
+    throw error;
   }
-  
-  const data = await response.json();
-  console.log('Received city content:', data);
-  return data;
 };
 
 export const CityPage = () => {
