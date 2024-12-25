@@ -7,12 +7,14 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     const { city } = await req.json()
+    console.log('Generating content for city:', city)
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -21,15 +23,20 @@ serve(async (req) => {
     )
 
     // Check if content already exists
-    const { data: existingContent } = await supabaseClient
+    const { data: existingContent, error: fetchError } = await supabaseClient
       .from('city_content')
-      .select('*')
+      .select('content')
       .eq('city', city)
       .single()
 
-    if (existingContent) {
+    if (fetchError) {
+      console.error('Error fetching existing content:', fetchError)
+    }
+
+    if (existingContent?.content) {
+      console.log('Returning existing content for:', city)
       return new Response(
-        JSON.stringify(existingContent),
+        JSON.stringify(existingContent.content),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -63,7 +70,7 @@ serve(async (req) => {
     }
 
     // Store the generated content
-    const { data, error } = await supabaseClient
+    const { data: insertedData, error: insertError } = await supabaseClient
       .from('city_content')
       .insert([
         {
@@ -74,16 +81,21 @@ serve(async (req) => {
       .select()
       .single()
 
-    if (error) throw error
+    if (insertError) {
+      console.error('Error inserting content:', insertError)
+      throw insertError
+    }
 
+    console.log('Successfully generated and stored content for:', city)
     return new Response(
-      JSON.stringify(data.content),
+      JSON.stringify(content),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
     )
   } catch (error) {
+    console.error('Error in generate-city-content:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
