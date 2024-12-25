@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { Tool, Award, Ruler, Users } from "lucide-react";
+import { Hammer, Award, Ruler, Users } from "lucide-react";
 
 export const Features = () => {
   const features = [
     {
-      icon: <Tool className="w-10 h-10" />,
+      icon: <Hammer className="w-10 h-10" />,
       title: "Master Craftsmanship",
       description: "Each staircase is handcrafted by our skilled artisans with decades of experience",
     },
