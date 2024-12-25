@@ -20,7 +20,7 @@ const fetchCityContent = async (city: string) => {
     if (!session) {
       // If no session exists, create an anonymous session
       const { data: { session: anonSession }, error: signInError } = 
-        await supabase.auth.signInWithAnonymous();
+        await supabase.auth.signInAnonymously(); // Corrected method name
 
       if (signInError) {
         console.error('Anonymous sign in error:', signInError);
@@ -69,10 +69,6 @@ export const CityPage = () => {
   // Normalize the city name to match the format in the cities array
   const normalizedCity = city ? city.charAt(0).toUpperCase() + city.slice(1).toLowerCase() : '';
   const isValidCity = cities.includes(normalizedCity as City);
-
-  console.log('Current city:', city);
-  console.log('Normalized city:', normalizedCity);
-  console.log('Is valid city:', isValidCity);
 
   const { data: content, isLoading, error } = useQuery({
     queryKey: ['cityContent', normalizedCity],
