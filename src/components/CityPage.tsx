@@ -20,10 +20,7 @@ const fetchCityContent = async (city: string) => {
     if (!session) {
       // If no session exists, create an anonymous session
       const { data: { session: anonSession }, error: signInError } = 
-        await supabase.auth.signInWithPassword({
-          email: 'anonymous@example.com',
-          password: 'anonymous123'
-        });
+        await supabase.auth.signInWithAnonymous();
 
       if (signInError) {
         console.error('Anonymous sign in error:', signInError);
@@ -59,7 +56,6 @@ const fetchCityContent = async (city: string) => {
       throw error;
     }
 
-    console.log('Received city content:', data);
     return data;
   } catch (error) {
     console.error('Failed to fetch city content:', error);
