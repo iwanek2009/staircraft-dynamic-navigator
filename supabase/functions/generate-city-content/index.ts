@@ -26,15 +26,30 @@ serve(async (req) => {
       )
     }
 
-    const { city } = await req.json()
-    console.log('Generating content for city:', city)
-    
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Verify the JWT token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+
+    if (authError || !user) {
+      console.error('Invalid JWT token:', authError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid JWT token' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        },
+      )
+    }
+
+    const { city } = await req.json()
+    console.log('Generating content for city:', city)
+    
     // Check if content already exists
     const { data: existingContent, error: fetchError } = await supabaseClient
       .from('city_content')

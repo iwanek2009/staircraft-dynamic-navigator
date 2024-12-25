@@ -9,10 +9,13 @@ import { supabase } from "@/lib/supabase";
 
 const fetchCityContent = async (city: string) => {
   try {
+    // Get the session first
+    const { data: { session } } = await supabase.auth.getSession();
+    
     const { data, error } = await supabase.functions.invoke('generate-city-content', {
       body: { city },
       headers: {
-        Authorization: `Bearer ${supabase.auth.getSession()?.access_token}`
+        Authorization: `Bearer ${session?.access_token}`
       }
     });
 
