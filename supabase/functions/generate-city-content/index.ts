@@ -32,14 +32,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Verify the JWT token
+    // Get the JWT token and verify it
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
 
-    if (authError || !user) {
-      console.error('Invalid JWT token:', authError)
+    if (authError) {
+      console.error('Auth error:', authError)
       return new Response(
-        JSON.stringify({ error: 'Invalid JWT token' }),
+        JSON.stringify({ error: 'Invalid JWT token', details: authError }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 401,
@@ -98,7 +98,7 @@ serve(async (req) => {
     }
 
     // Store the generated content
-    const { data: insertedData, error: insertError } = await supabaseClient
+    const { error: insertError } = await supabaseClient
       .from('city_content')
       .insert([
         {
@@ -106,8 +106,6 @@ serve(async (req) => {
           content
         }
       ])
-      .select()
-      .single()
 
     if (insertError) {
       console.error('Error inserting content:', insertError)

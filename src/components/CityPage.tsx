@@ -9,13 +9,48 @@ import { supabase } from "@/lib/supabase";
 
 const fetchCityContent = async (city: string) => {
   try {
-    // Get the session first
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get the current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw sessionError;
+    }
+
+    if (!session) {
+      // If no session exists, create an anonymous session
+      const { data: { session: anonSession }, error: signInError } = 
+        await supabase.auth.signInWithPassword({
+          email: 'anonymous@example.com',
+          password: 'anonymous123'
+        });
+
+      if (signInError) {
+        console.error('Anonymous sign in error:', signInError);
+        throw signInError;
+      }
+
+      // Use the anonymous session token
+      const { data, error } = await supabase.functions.invoke('generate-city-content', {
+        body: { city },
+        headers: {
+          Authorization: `Bearer ${anonSession?.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Error fetching city content:', error);
+        throw error;
+      }
+
+      return data;
+    }
+
+    // Use the existing session token
     const { data, error } = await supabase.functions.invoke('generate-city-content', {
       body: { city },
       headers: {
-        Authorization: `Bearer ${session?.access_token}`
+        Authorization: `Bearer ${session.access_token}`
       }
     });
 
