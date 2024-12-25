@@ -27,11 +27,18 @@ const fetchCityContent = async (city: string) => {
 
 export const CityPage = () => {
   const { city } = useParams<{ city: string }>();
-  const isValidCity = cities.includes(city as City);
+  
+  // Normalize the city name to match the format in the cities array
+  const normalizedCity = city ? city.charAt(0).toUpperCase() + city.slice(1).toLowerCase() : '';
+  const isValidCity = cities.includes(normalizedCity as City);
+
+  console.log('Current city:', city);
+  console.log('Normalized city:', normalizedCity);
+  console.log('Is valid city:', isValidCity);
 
   const { data: content, isLoading, error } = useQuery({
-    queryKey: ['cityContent', city],
-    queryFn: () => fetchCityContent(city as string),
+    queryKey: ['cityContent', normalizedCity],
+    queryFn: () => fetchCityContent(normalizedCity),
     enabled: isValidCity,
     staleTime: 1000 * 60 * 60 * 24 * 180, // Cache for 6 months
   });
@@ -60,17 +67,17 @@ export const CityPage = () => {
         <meta name="description" content={content.metaDescription} />
       </Helmet>
 
-      <CityHero city={city as string} title={content.title} />
+      <CityHero city={normalizedCity} title={content.title} />
 
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid gap-12">
             <CityIntroduction 
-              city={city as string} 
+              city={normalizedCity} 
               introduction={content.introduction} 
             />
             <CityFAQ 
-              city={city as string} 
+              city={normalizedCity} 
               faqs={content.faqs} 
             />
           </div>
