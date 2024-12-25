@@ -10,7 +10,10 @@ import { supabase } from "@/lib/supabase";
 const fetchCityContent = async (city: string) => {
   try {
     const { data, error } = await supabase.functions.invoke('generate-city-content', {
-      body: { city }
+      body: { city },
+      headers: {
+        Authorization: `Bearer ${supabase.auth.getSession()?.access_token}`
+      }
     });
 
     if (error) {
