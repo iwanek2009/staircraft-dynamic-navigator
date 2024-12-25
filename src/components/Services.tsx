@@ -1,8 +1,8 @@
-import { Stairs, Shield, PencilRuler, Clock } from "lucide-react";
+import { Building, Shield, PencilRuler, Clock } from "lucide-react";
 
 const services = [
   {
-    icon: <Stairs className="w-8 h-8" />,
+    icon: <Building className="w-8 h-8" />,
     title: "Custom Design",
     description: "Bespoke staircases tailored to your space and style",
   },
