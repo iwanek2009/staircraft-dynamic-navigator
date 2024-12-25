@@ -24,7 +24,7 @@ export default {
         accent: "#C4A661",
       },
       fontFamily: {
-        display: ["Playfair Display", "serif"],
+        display: ["Manrope", "sans-serif"],
         sans: ["Inter", "sans-serif"],
       },
       keyframes: {
