@@ -4,36 +4,52 @@ import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet";
 
-const faqs = [
-  {
-    question: "What are the stair design requirements?",
-    answer: "All staircases must comply with UK Building Regulations (Approved Document K), which specify requirements for rise, going, headroom, and handrails. Our designs ensure full compliance while meeting your aesthetic preferences.",
-  },
-  {
-    question: "How do I choose the right stair manufacturer?",
-    answer: "Look for manufacturers with proven experience, regulatory compliance knowledge, and a portfolio of successful installations. We offer free consultations to discuss your specific requirements.",
-  },
-  {
-    question: "Are your staircases compliant with UK Building Regulations?",
-    answer: "Yes, all our staircases are designed and manufactured in full compliance with UK Building Regulations, specifically Approved Document K, ensuring safety and legal requirements are met.",
-  },
-  {
-    question: "What is the typical cost of custom stair manufacturing?",
-    answer: "Costs vary based on design complexity, materials, and specifications. We provide detailed quotes after understanding your requirements during the initial consultation.",
-  },
-];
+const fetchCityContent = async (city: string) => {
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-city-content`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ city }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch city content');
+  }
+  
+  return response.json();
+};
 
 export const CityPage = () => {
   const { city } = useParams<{ city: string }>();
   const isValidCity = cities.includes(city as City);
 
+  const { data: content, isLoading } = useQuery({
+    queryKey: ['cityContent', city],
+    queryFn: () => fetchCityContent(city as string),
+    enabled: isValidCity,
+    staleTime: 1000 * 60 * 60 * 24 * 180, // Cache for 6 months
+  });
+
   if (!isValidCity) {
     return <div>City not found</div>;
   }
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>{content.title}</title>
+        <meta name="description" content={content.metaDescription} />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[400px]">
         <div className="absolute inset-0">
@@ -52,7 +68,7 @@ export const CityPage = () => {
             className="max-w-2xl text-white p-4"
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Expert Stair Manufacturers in {city}
+              {content.title}
             </h1>
             <p className="text-xl mb-8">
               Custom designs & UK Building Regulations compliance
@@ -74,13 +90,7 @@ export const CityPage = () => {
                 <CardTitle>Bespoke Stair Manufacturing in {city}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
-                  As leading stair manufacturers in {city}, we specialize in creating
-                  bespoke staircases that combine stunning design with full compliance
-                  to UK Building Regulations. Our expert team brings years of
-                  experience in crafting custom stairs for both residential and
-                  commercial properties across {city} and surrounding areas.
-                </p>
+                <p className="text-gray-600">{content.introduction}</p>
               </CardContent>
             </Card>
 
@@ -90,7 +100,7 @@ export const CityPage = () => {
                 Frequently Asked Questions about Stair Manufacturing in {city}
               </h2>
               <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq, index) => (
+                {content.faqs.map((faq, index) => (
                   <AccordionItem key={index} value={`item-${index}`}>
                     <AccordionTrigger>{faq.question}</AccordionTrigger>
                     <AccordionContent>{faq.answer}</AccordionContent>
