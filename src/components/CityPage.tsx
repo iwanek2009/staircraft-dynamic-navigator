@@ -21,14 +21,16 @@ const fetchCityContent = async (city: string) => {
     throw new Error('Failed to fetch city content');
   }
   
-  return response.json();
+  const data = await response.json();
+  console.log('Received city content:', data); // Debug log
+  return data;
 };
 
 export const CityPage = () => {
   const { city } = useParams<{ city: string }>();
   const isValidCity = cities.includes(city as City);
 
-  const { data: content, isLoading } = useQuery({
+  const { data: content, isLoading, error } = useQuery({
     queryKey: ['cityContent', city],
     queryFn: () => fetchCityContent(city as string),
     enabled: isValidCity,
@@ -36,11 +38,20 @@ export const CityPage = () => {
   });
 
   if (!isValidCity) {
-    return <div>City not found</div>;
+    return <div className="container mx-auto p-4">City not found</div>;
   }
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="container mx-auto p-4">Loading...</div>;
+  }
+
+  if (error) {
+    console.error('Error fetching city content:', error);
+    return <div className="container mx-auto p-4">Error loading content</div>;
+  }
+
+  if (!content) {
+    return <div className="container mx-auto p-4">No content available</div>;
   }
 
   return (
